@@ -4,6 +4,8 @@
 
 When a pull request rolls back a fix, see which release branches already received it and which backports are still waiting to merge. The Action writes a linked table to the GitHub Actions job summary. It needs only pull request read access. No checkout, external service, or package installation is required.
 
+[Install from GitHub Marketplace](https://github.com/marketplace/actions/backport-revert-alert) · [See a real workflow run](https://github.com/KPhanindraReddy/backport-revert-alert/actions/runs/45624196069)
+
 **Developer** · Kphanindra reddy
 
 ## Install
@@ -28,20 +30,11 @@ jobs:
           release-branches: release/3.2, release/3.1, release/3.0
 ```
 
-## Worked example
+## Worked example from pandas
 
-1. Merge driver fix **#412** into main.
-2. Open **#430** against release/3.2 with `Backport #412` in the body and merge it. Leave a second backport **#445** open against release/3.1.
-3. Open rollback **#450** against main. Put `Reverts #412` on its own line in the description.
-4. Open the workflow run summary from the PR checks.
+When [rollback #71981](https://github.com/pandas-dev/pandas/pull/71981) reverted [original PR #71883](https://github.com/pandas-dev/pandas/pull/71883), the linked [backport #71982](https://github.com/pandas-dev/pandas/pull/71982) had closed without merging. The Action therefore reported no open or merged backport on `3.1.x`.
 
-| Original PR | Release branch | Linked backport | Status |
-|---|---|---|---|
-| #412 | release/3.2 | #430 | Merged — review this release |
-| #412 | release/3.1 | #445 | Open — review before merging |
-| #412 | release/3.0 | — | No linked open or merged backport found |
-
-These numbers are sample data for the local tests. Run `node --test example.test.js` with Node.js 24. For clickable public PRs, open the [verified GitHub Actions summary](https://github.com/KPhanindraReddy/backport-revert-alert/actions/runs/45624196069).
+The [public run summary](https://github.com/KPhanindraReddy/backport-revert-alert/actions/runs/45624196069) also links a separate merged example: [original #72126](https://github.com/pandas-dev/pandas/pull/72126) and [backport #72146](https://github.com/pandas-dev/pandas/pull/72146). Run the offline tests locally with `node --test example.test.js`.
 
 ## Checks against public repositories
 
