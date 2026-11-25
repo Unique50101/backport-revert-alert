@@ -1,4 +1,6 @@
-# Backport Revert Alert
+![Backport Revert Alert — copper and blue railway tracks branching across a navy background](./assets/banner.svg)
+
+[![Tests](https://github.com/KPhanindraReddy/backport-revert-alert/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/KPhanindraReddy/backport-revert-alert/actions/workflows/test.yml) [![Release](https://img.shields.io/github/v/release/KPhanindraReddy/backport-revert-alert)](https://github.com/KPhanindraReddy/backport-revert-alert/releases/latest) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 When a pull request rolls back a fix, see which release branches already received it and which backports are still waiting to merge. The Action writes a linked table to the GitHub Actions job summary. It needs only pull request read access. No checkout, external service, or package installation is required.
 
@@ -40,6 +42,17 @@ jobs:
 | #412 | release/3.0 | — | No linked open or merged backport found |
 
 These numbers are sample data. Open **Actions → Tests and worked example** for the executable demonstration, or run `node --test example.test.js` locally with Node.js 24.
+
+## Checks against public repositories
+
+We ran the report function from the v1.0.0 tag locally with real PR records from the public GitHub API. These checks used read-only access and did not install the Action in either project.
+
+| Rollback PR | What v1.0.0 reported | What the result means |
+|---|---|---|
+| [pandas #71981](https://github.com/pandas-dev/pandas/pull/71981) | Identified original [#71883](https://github.com/pandas-dev/pandas/pull/71883). No linked open or merged backport on `3.1.x`. | The linked [backport #71982](https://github.com/pandas-dev/pandas/pull/71982) was closed without merging. The Action correctly excluded it. |
+| [CPython #161988](https://github.com/python/cpython/pull/161988) | Skipped before scanning release branches. | The rollback uses `Reverts gh-161621`. Version 1.0.0 recognizes `Reverts #161621` and qualified GitHub references. |
+
+The [worked-example workflow](https://github.com/KPhanindraReddy/backport-revert-alert/actions/runs/45619144196) demonstrates the open and merged outcomes with sample data.
 
 ## Reference formats and limits
 
