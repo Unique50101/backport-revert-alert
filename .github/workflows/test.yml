@@ -10,7 +10,47 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
-      - name: Test and render sample rollback
+      - name: Run fixture tests
         run: node --test example.test.js
+      - name: Show real public pull requests
+        shell: bash
         env:
-          WRITE_DEMO_SUMMARY: '1'
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs/promises');
+          const { report, references } = require('./index');
+          async function read(path) {
+            const response = await fetch('https://api.github.com/repos/' + path, {
+              headers: { Authorization: 'Bearer ' + process.env.GH_TOKEN }
+            });
+            if (!response.ok) throw new Error('GitHub returned ' + response.status + ' for ' + path);
+            return response.json();
+          }
+          const link = pr => '[#' + pr.number + '](' + pr.html_url + ')';
+          async function main() {
+            const lines = ['# Public pull request checks', '', '## Verified backport links', '',
+              '| Repository | Original PR | Release branch | Linked backport | Current status |',
+              '|---|---|---|---|---|'];
+            const repo = 'pandas-dev/pandas';
+            for (const [original, backport] of [[72126, 72146], [71883, 71982]]) {
+              const [source, copy] = await Promise.all([original, backport].map(n => read(repo + '/pulls/' + n)));
+              if (!references(copy, 'backport', repo).has(String(source.number))) throw new Error('Backport marker changed: ' + copy.html_url);
+              const status = copy.merged_at ? 'Merged' : copy.state === 'open' ? 'Open' : 'Closed without merging';
+              lines.push('| ' + [repo, link(source), copy.base.ref, link(copy), status].join(' | ') + ' |');
+            }
+            lines.push('', 'These rows show actual backport relationships. Below are results from running the rollback check on real PRs.');
+            for (const [project, rollback, branch] of [
+              ['openvinotoolkit/openvino', 40081, 'releases/2026/5'],
+              ['google/googletest', 2609, 'v1.10.x'],
+              [repo, 71981, '3.1.x']
+            ]) {
+              const pr = await read(project + '/pulls/' + rollback);
+              const summary = await report({ ...process.env, GITHUB_REPOSITORY: project,
+                INPUT_TOKEN: process.env.GH_TOKEN, 'INPUT_RELEASE-BRANCHES': branch }, { pull_request: pr });
+              lines.push('', '### ' + project + ' rollback ' + link(pr), '', summary);
+            }
+            await fs.appendFile(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
+          }
+          main().catch(error => { console.error(error.message); process.exitCode = 1; });
+          NODE
