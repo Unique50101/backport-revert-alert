@@ -1,0 +1,16 @@
+name: Backport Revert Alert
+description: Find open and merged backports on release branches when a pull request reverts an earlier change.
+author: Kphanindra reddy
+branding:
+  icon: git-pull-request
+  color: orange
+inputs:
+  release-branches:
+    description: Exact release branch names, separated by commas or newlines.
+    required: true
+  token:
+    description: GitHub token with pull-requests read access.
+    default: ${{ github.token }}
+runs:
+  using: node24
+  main: index.js
